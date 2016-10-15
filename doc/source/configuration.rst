@@ -1,44 +1,36 @@
 Configuration
 -------------
 
-Gertty uses a YAML based configuration file that it looks for at
-``~/.gertty.yaml``.  Several sample configuration files are included.
+Boartty uses a YAML based configuration file that it looks for at
+``~/.boartty.yaml``.  Several sample configuration files are included.
 You can find them in the examples/ directory of the
-`source distribution <https://git.openstack.org/cgit/openstack/gertty/tree/examples>`_
-or the share/gertty/examples directory after installation.
+`source distribution <https://git.openstack.org/cgit/openstack/boartty/tree/examples>`_
+or the share/boartty/examples directory after installation.
 
-Select one of the sample config files, copy it to ~/.gertty.yaml and
+Select one of the sample config files, copy it to ~/.boartty.yaml and
 edit as necessary.  Search for ``CHANGEME`` to find parameters that
 need to be supplied.  The sample config files are as follows:
 
-**minimal-gertty.yaml**
-  Only contains the parameters required for Gertty to actually run.
+**minimal-boartty.yaml**
+  Only contains the parameters required for Boartty to actually run.
 
-**reference-gertty.yaml**
+**reference-boartty.yaml**
   An exhaustive list of all supported options with examples.
 
-**openstack-gertty.yaml**
+**openstack-boartty.yaml**
   A configuration designed for use with OpenStack's installation of
   Gerrit.
 
-**googlesource-gertty.yaml**
-  A configuration designed for use with installations of Gerrit
-  running on googlesource.com.
+You will need a Storyboard authentication token which you can generate
+or retrieve by navigating to ``Profile``, then ``Tokens`` (the "key"
+icon), or visiting the `/#!/profile/tokens` URI in your Storyboard
+installation.  Issue a new token if you have not done so before, and
+give it a sufficiently long lifetime (for example, one decade).  Copy
+and paste the resulting token in your ``~/.boartty.yaml`` file.
 
-You will need your Gerrit password which you can generate or retrieve
-by navigating to ``Settings``, then ``HTTP Password``.
-
-Gertty uses local git repositories to perform much of its work.  These
-can be the same git repositories that you use when developing a
-project.  Gertty will not alter the working directory or index unless
-you request it to (and even then, the usual git safeguards against
-accidentally losing work remain in place).  You will need to supply
-the name of a directory where Gertty will find or clone git
-repositories for your projects as the ``git-root`` parameter.
-
-The config file is designed to support multiple Gerrit instances.  The
-first one is used by default, but others can be specified by supplying
-the name on the command line.
+The config file is designed to support multiple Storyboard instances.
+The first one is used by default, but others can be specified by
+supplying the name on the command line.
 
 Configuration Reference
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -49,8 +41,8 @@ configuration file.
 Servers
 +++++++
 
-This section lists the servers that Gertty can talk to.  Multiple
-servers may be listed; by default, Gertty will use the first one
+This section lists the servers that Boartty can talk to.  Multiple
+servers may be listed; by default, Boartty will use the first one
 listed.  To select another, simply specify its name on the command
 line.
 
@@ -65,30 +57,17 @@ line.
   **url (required)**
     The URL of the Gerrit server.  HTTPS should be preferred.
 
-  **username (required)**
-    Your username in Gerrit. [required]
-
-  **password (required)**
-    Your password in Gerrit.  Obtain it from Settings -> HTTP Password
-    in the Gerrit web interface.
-
-  **auth-type**
-    Authentication type required by the Gerrit server. Can be 'basic',
-    'digest', or 'form'. Defaults to 'digest'.
-
-  **git-root (required)**
-    A location where Gertty should store its git repositories.  These
-    can be the same git repositories where you do your own work --
-    Gertty will not modify them unless you tell it to, and even then
-    the normal git protections against losing work remain in place.
+  **token (required)**
+    Your authentication token from Storyboard.  Obtain it as described
+    above in "Configuration".
 
   **dburi**
-    The location of Gertty's sqlite database.  If you have more than
+    The location of Boartty's sqlite database.  If you have more than
     one server, you should specify a dburi for any additional servers.
-    By default a SQLite database called ~/.gertty.db is used.
+    By default a SQLite database called ~/.boartty.db is used.
 
   **ssl-ca-path**
-    If your Gerrit server uses a non-standard certificate chain
+    If your Storyboard server uses a non-standard certificate chain
     (e.g. on a test server), you can pass a full path to a bundle of
     CA certificates here:
 
@@ -98,18 +77,18 @@ line.
     turn off certificate validation.
 
   **log-file**
-    By default Gertty logs errors to a file and truncates that file
+    By default Boartty logs errors to a file and truncates that file
     each time it starts (so that it does not grow without bound).  If
     you would like to log to a different location, you may specify it
     with this option.
 
   **socket**
-    Gertty listens on a unix domain socket for remote commands at
-    ~/.gertty.sock.  This option may be used to change the path.
+    Boartty listens on a unix domain socket for remote commands at
+    ~/.boartty.sock.  This option may be used to change the path.
 
   **lock-file**
-    Gertty uses a lock file per server to prevent multiple processes
-    from running at the same time. The default is ~/.gertty.servername.lock
+    Boartty uses a lock file per server to prevent multiple processes
+    from running at the same time. The default is ~/.boartty.servername.lock
 
 Example:
 
@@ -117,14 +96,12 @@ Example:
    servers:
      - name: CHANGEME
        url: https://CHANGEME.example.org/
-       username: CHANGEME
-       password: CHANGEME
-       git-root: ~/git/
+       token: CHANGEME
 
 Palettes
 ++++++++
 
-Gertty comes with two palettes defined internally.  The default
+Boartty comes with two palettes defined internally.  The default
 palette is suitable for use on a terminal with a dark background.  The
 `light` palette is for a terminal with a white or light background.
 You may customize the colors in either of those palettes, or define
@@ -140,7 +117,7 @@ high-color terminals.
 For a reference of possible color names, see the `Urwid Manual
 <http://urwid.org/manual/displayattributes.html#foreground-and-background-settings>`_
 
-To see the list of possible palette entries, run `gertty --print-palette`.
+To see the list of possible palette entries, run `boartty --print-palette`.
 
 The following example alters two colors in the default palette, one
 color in the light palette, and one color in a custom palette.
@@ -148,12 +125,12 @@ color in the light palette, and one color in a custom palette.
 .. code-block: yaml
    palettes:
      - name: default
-       added-line: ['dark green', '']
-       added-word: ['light green', '']
+       task-title: ['light green', '']
+       task-id: ['dark cyan', '']
      - name: light
-       filename: ['dark cyan', '']
+       task-project: ['dark blue', '']
      - name: custom
-       filename: ['light yellow', '']
+       task-project: ['dark red', '']
 
 Palettes may be selected at runtime with the `-p PALETTE` command
 line option, or you may set the default palette in the config file.
@@ -170,21 +147,21 @@ may be overridden and custom keymaps defined and selected in the
 config file or the command line.
 
 Each keymap contains a mapping of command -> key(s).  If a command is
-not specified, Gertty will use the keybinding specified in the default
+not specified, Boartty will use the keybinding specified in the default
 map.  More than one key can be bound to a command.
 
-Run `gertty --print-keymap` for a list of commands that can be bound.
+Run `boartty --print-keymap` for a list of commands that can be bound.
 
 The following example modifies the `default` keymap:
 
 .. code-block: yaml
    keymaps:
      - name: default
-       diff: 'd'
+       leave-comment: 'r'
      - name: custom
-       review: ['r', 'R']
-     - name: osx #OS X blocks ctrl+o
-       change-search: 'ctrl s'
+       leave-comment: ['r', 'R']
+     - name: osx  # OS X blocks ctrl+o
+       story-search: 'ctrl s'
 
 
 To specify a sequence of keys, they must be a list of keystrokes
@@ -204,9 +181,9 @@ option, or in the config file.
 Commentlinks
 ++++++++++++
 
-Commentlinks are regular expressions that are applied to commit and
-review messages.  They can be replaced with internal or external
-links, or have colors applied.
+Commentlinks are regular expressions that are applied to story
+descriptions and comments.  They can be replaced with internal or
+external links, or have colors applied.
 
 **commentlinks**
   This is a list of commentlink patterns.  Each commentlink pattern is
@@ -247,7 +224,7 @@ links, or have colors applied.
         palette entry.
 
     **search**
-      A hyperlink that will perform a Gertty search when activated.
+      A hyperlink that will perform a Boartty search when activated.
 
       **text**
         The replacement text.
@@ -255,31 +232,31 @@ links, or have colors applied.
       **query**
         The search query to use.
 
-This example matches Gerrit change ids, and replaces them with a link
-to an internal Gertty search for that change id.
+This example matches story numbers, and replaces them with a link to
+an internal Boartty search for that story.
 
 .. code-block: yaml
    commentlinks:
-     - match: "(?P<id>I[0-9a-fA-F]{40})"
+     - match: "(?P<id>[0-9]+)"
        replacements:
          - search:
              text: "{id}"
-             query: "change:{id}"
+             query: "story:{id}"
 
-Change List Options
-+++++++++++++++++++
+Story List Options
+++++++++++++++++++
 
-**change-list-query**
-  This is the query used for the list of changes when a project is
-  selected.  The default is `status:open`.
+**story-list-query**
+  This is the query used for the list of storyies when a project is
+  selected.  The default is empty.
 
-**change-list-options**
-  This section defines default sorting options for the change list.
+**story-list-options**
+  This section defines default sorting options for the story list.
 
   **sort-by**
     This key specifies the sort order, which can be `number` (the
-    Change number), `updated` (when the change was last updated), or
-    `last-seen` (when the change was last opened in Gertty).
+    Story number), `updated` (when the story was last updated), or
+    `last-seen` (when the story was last opened in Boartty).
 
   **reverse**
     This is a boolean value which indicates whether the list should be
@@ -288,45 +265,16 @@ Change List Options
 Example:
 
 .. code-block: yaml
-   change-list-options:
+   story-list-options:
      sort-by: 'number'
      reverse: false
-
-**thread-changes**
-  Dependent changes are displayed as "threads" in the change list by
-  default.  To disable this behavior, set this value to false.
-
-Change View Options
-+++++++++++++++++++
-
-**hide-comments**
-  This is a list of descriptors which cause matching comments to be
-  hidden by default.  Press the `t` key to toggle the display of
-  matching comments.
-
-The only supported criterion is `author`.
-
-  **author**
-    A regular expression to match against the comment author's name.
-
-For example, to hide comments from a CI system:
-
-.. code-block: yaml
-
-   hide-comments:
-     - author: "^(.*CI|Jenkins)$"
-
-**diff-view**
-  Specifies how patch diffs should be displayed.  The values `unified`
-  or `side-by-side` (the default) are supported.
-
 
 Dashboards
 ++++++++++
 
 This section defines customized dashboards.  You may supply any
-Gertty search string and bind them to any key.  They will appear in
-the global help text, and pressing the key anywhere in Gertty will
+Boartty search string and bind them to any key.  They will appear in
+the global help text, and pressing the key anywhere in Boartty will
 run the query and display the results.
 
 **dashboards**
@@ -337,7 +285,7 @@ run the query and display the results.
     bar at the top of the screen.
 
   **query**
-    The search query to perform to gather changes to be listed in the
+    The search query to perform to gather stories to be listed in the
     dashboard.
 
   **key**
@@ -348,60 +296,15 @@ Example:
 .. code-block: yaml
 
    dashboards:
-     - name: "My changes"
-       query: "owner:self status:open"
+     - name: "My stories"
+       query: "creator:self status:active"
        key: "f2"
-
-Reviewkeys
-++++++++++
-
-Reviewkeys are hotkeys that perform immediate reviews within the
-change screen.  Any pending comments or review messages will be
-attached to the review; otherwise an empty review message will be
-left.  The approvals list is exhaustive, so if you specify an empty
-list, Gertty will submit a review that clears any previous approvals.
-Reviewkeys appear in the help text for the change screen.
-
-**reviewkeys**
-  A list of reviewkey definitions, the format of which is described
-  below.
-
-  **key**
-    This key to which this review action should be bound.
-
-  **approvals**
-    A list of approvals to include when this reviewkey is activated.
-    Each element of the list should include both a category and a
-    value.
-
-    **category**
-      The name of the review label for this approval.
-
-    **value**
-      The value for this approval.
-
-  **submit**
-    Set this to `true` to instruct Gerrit to submit the change when
-    this reviewkey is activated.
-
-The following example includes a reviewkey that clears all labels, as
-well as one that leaves a +1 "Code-Review" approval.
-
-.. code-block: yaml
-
-   reviewkeys:
-     - key: 'meta 0'
-       approvals: []
-     - key: 'meta 1'
-       approvals:
-         - category: 'Code-Review'
-           value: 1
 
 General Options
 +++++++++++++++
 
 **breadcrumbs**
-  Gertty displays a footer at the bottom of the screen by default
+  Boartty displays a footer at the bottom of the screen by default
   which contains navigation information in the form of "breadcrumbs"
   -- short descriptions of previous screens, with the right-most entry
   indicating the screen that will be displayed if you press the `ESC`
@@ -412,15 +315,6 @@ General Options
   them in UTC instead, set this value to `true`.
 
 **handle-mouse**
-  Gertty handles mouse input by default.  If you don't want it
+  Boartty handles mouse input by default.  If you don't want it
   interfering with your terminal's mouse handling, set this value to
   `false`.
-
-**expire-age**
-  By default, closed changes that are older than two months are
-  removed from the local database (and their refs are removed from the
-  local git repos so that git may garbage collect them).  If you would
-  like to change the expiration delay or disable it, uncomment the
-  following line.  The time interval is specified in the same way as
-  the "age:" term in Gerrit's search syntax.  To disable it
-  altogether, set the value to the empty string.
