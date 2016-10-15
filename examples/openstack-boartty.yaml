@@ -1,0 +1,42 @@
+# This is an example ~/.boartty.yaml file for use with OpenStack's
+# Storyboard.  Most of these options are not required, rather, they
+# customize Boartty to better deal with the particulars of OpenStack's
+# Storyboard configuration.
+
+# This file does not list all of the available options.  For a full
+# list with explanations, see the 'reference-boartty.yaml' file.
+
+servers:
+  - name: openstack
+    url: https://review.openstack.org/
+    # Your authentication token for Storyboard. Go to the "Profile"
+    # and then "Tokens" (the "key" icon) page in the Storyboard web
+    # interface and create a token.  Give it a sufficiently long
+    # validity period (e.g., one decade), and copy and paste the value
+    # here.
+    token: CHANGEME
+
+# Uncomment the next line if your terminal has a white background
+# palette: light
+
+# This section defines customized dashboards.  You can supply any
+# Boartty search string and bind them to any key.  They will appear in
+# the global help text, and pressing the key anywhere in Boartty will
+# run the query and display the results.
+#
+# NB: "recentlyseen:24 hours" does not just return stories seen in the
+# last 24 hours -- it returns stories seen within 24 hours of the most
+# recently seen change.  So you can take the weekend off and pick up
+# where you were.
+dashboards:
+  - name: "My stories"
+    query: "creator:self status:active"
+    key: "f2"
+  - name: "Starred stories"
+    query: "is:starred"
+    key: "f3"
+  - name: "Recently seen stories"
+    query: "recentlyseen:24 hours"
+    sort-by: "last-seen"
+    reverse: True
+    key: "f4"
