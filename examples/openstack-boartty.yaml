@@ -8,7 +8,7 @@
 
 servers:
   - name: openstack
-    url: https://review.openstack.org/
+    url: https://storyboard.openstack.org/
     # Your authentication token for Storyboard. Go to the "Profile"
     # and then "Tokens" (the "key" icon) page in the Storyboard web
     # interface and create a token.  Give it a sufficiently long
