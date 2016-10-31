@@ -853,7 +853,7 @@ class OpenChangeAction(argparse.Action):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Console client for Gerrit Code Review.')
+        description='Console client for Storyboard.')
     parser.add_argument('-c', dest='path',
                         default=config.DEFAULT_CONFIG_PATH,
                         help='path to config file')
