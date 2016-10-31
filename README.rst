@@ -56,7 +56,7 @@ need to be supplied.  The sample config files are as follows:
 
 **openstack-boartty.yaml**
   A configuration designed for use with OpenStack's installation of
-  Gerrit.
+  Storyboard.
 
 You will need a Storyboard authentication token which you can generate
 or retrieve by navigating to ``Profile``, then ``Tokens`` (the "key"
