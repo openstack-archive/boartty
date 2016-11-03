@@ -78,6 +78,63 @@ story_table = Table(
     Column('pending', Boolean, index=True, nullable=False),
     Column('pending_delete', Boolean, index=True, nullable=False),
 )
+board_table = Table(
+    'board', metadata,
+    Column('key', Integer, primary_key=True),
+    Column('id', Integer, index=True),
+    Column('user_key', Integer, ForeignKey("user.key"), index=True),
+    Column('hidden', Boolean, index=True, nullable=False, default=False),
+    Column('subscribed', Boolean, index=True, nullable=False, default=False),
+    Column('title', String(255), index=True),
+    Column('private', Boolean, nullable=False, default=False),
+    Column('description', Text),
+    Column('created', DateTime, index=True),
+    Column('updated', DateTime, index=True),
+    Column('last_seen', DateTime, index=True),
+    Column('pending', Boolean, index=True, nullable=False, default=False),
+    Column('pending_delete', Boolean, index=True, nullable=False, default=False),
+)
+lane_table = Table(
+    'lane', metadata,
+    Column('key', Integer, primary_key=True),
+    Column('id', Integer, index=True),
+    Column('board_key', Integer, ForeignKey("board.key"), index=True),
+    Column('worklist_key', Integer, ForeignKey("worklist.key"), index=True),
+    Column('position', Integer),
+    Column('created', DateTime, index=True),
+    Column('updated', DateTime, index=True),
+    Column('pending', Boolean, index=True, nullable=False, default=False),
+    Column('pending_delete', Boolean, index=True, nullable=False, default=False),
+)
+worklist_table = Table(
+    'worklist', metadata,
+    Column('key', Integer, primary_key=True),
+    Column('id', Integer, index=True),
+    Column('user_key', Integer, ForeignKey("user.key"), index=True),
+    Column('hidden', Boolean, index=True, nullable=False, default=False),
+    Column('subscribed', Boolean, index=True, nullable=False, default=False),
+    Column('title', String(255), index=True),
+    Column('private', Boolean, nullable=False, default=False),
+    Column('automatic', Boolean, nullable=False, default=False),
+    Column('created', DateTime, index=True),
+    Column('updated', DateTime, index=True),
+    Column('last_seen', DateTime, index=True),
+    Column('pending', Boolean, index=True, nullable=False, default=False),
+    Column('pending_delete', Boolean, index=True, nullable=False, default=False),
+)
+worklist_item_table = Table(
+    'worklist_item', metadata,
+    Column('key', Integer, primary_key=True),
+    Column('id', Integer, index=True),
+    Column('worklist_key', Integer, ForeignKey("worklist.key"), index=True),
+    Column('story_key', Integer, ForeignKey("story.key"), index=True),
+    Column('task_key', Integer, ForeignKey("task.key"), index=True),
+    Column('position', Integer),
+    Column('created', DateTime, index=True),
+    Column('updated', DateTime, index=True),
+    Column('pending', Boolean, index=True, nullable=False, default=False),
+    Column('pending_delete', Boolean, index=True, nullable=False, default=False),
+)
 tag_table = Table(
     'tag', metadata,
     Column('key', Integer, primary_key=True),
@@ -235,6 +292,10 @@ class Story(object):
         self.pending = pending
         self.pending_delete = False
 
+    def __repr__(self):
+        return '<Story key=%s id=%s title=%s>' % (
+            self.key, self.id, self.title)
+
     @property
     def creator_name(self):
         return format_name(self)
@@ -297,6 +358,10 @@ class Task(object):
         self.created = created
         self.project = project
 
+    def __repr__(self):
+        return '<Task key=%s id=%s title=%s, project=%s>' % (
+            self.key, self.id, self.title, self.project)
+
 class Event(object):
     def __init__(self, id=None, type=None, creator=None, created=None, info=None):
         self.id = id
@@ -332,6 +397,58 @@ class Comment(object):
         self.pending = pending
         self.pending_delete = pending_delete
         self.draft = draft
+
+class Board(object):
+    def __init__(self, **kw):
+        for k, v in kw.items():
+            setattr(self, k, v)
+
+    def __repr__(self):
+        return '<Board key=%s id=%s title=%s>' % (
+            self.key, self.id, self.title)
+
+    def addLane(self, *args, **kw):
+        session = Session.object_session(self)
+        l = Lane(*args, **kw)
+        session.add(l)
+        session.flush()
+        l.board = self
+        return l
+
+class Lane(object):
+    def __init__(self, **kw):
+        for k, v in kw.items():
+            setattr(self, k, v)
+
+    def __repr__(self):
+        return '<Lane key=%s id=%s worklist=%s>' % (
+            self.key, self.id, self.worklist)
+
+class Worklist(object):
+    def __init__(self, **kw):
+        for k, v in kw.items():
+            setattr(self, k, v)
+
+    def __repr__(self):
+        return '<Worklist key=%s id=%s title=%s>' % (
+            self.key, self.id, self.title)
+
+    def addItem(self, *args, **kw):
+        session = Session.object_session(self)
+        i = WorklistItem(*args, **kw)
+        session.add(i)
+        session.flush()
+        i.worklist = self
+        return i
+
+class WorklistItem(object):
+    def __init__(self, **kw):
+        for k, v in kw.items():
+            setattr(self, k, v)
+
+    def __repr__(self):
+        return '<WorklistItem key=%s id=%s story=%s task=%s>' % (
+            self.key, self.id, self.story, self.task)
 
 class SyncQuery(object):
     def __init__(self, name):
@@ -390,6 +507,25 @@ mapper(Event, event_table, properties=dict(
 mapper(Comment, comment_table, properties=dict(
     parent=relationship(Comment, remote_side=[comment_table.c.key],backref='children'),
 ))
+mapper(Board, board_table, properties=dict(
+    lanes=relationship(Lane,
+                       order_by=lane_table.c.position),
+    creator=relationship(User),
+))
+mapper(Lane, lane_table, properties=dict(
+    board=relationship(Board),
+    worklist=relationship(Worklist),
+))
+mapper(Worklist, worklist_table, properties=dict(
+    items=relationship(WorklistItem,
+                       order_by=worklist_item_table.c.position),
+    creator=relationship(User),
+))
+mapper(WorklistItem, worklist_item_table, properties=dict(
+    worklist=relationship(Worklist),
+    story=relationship(Story),
+    task=relationship(Task),
+))
 mapper(SyncQuery, sync_query_table)
 
 def match(expr, item):
@@ -407,8 +543,8 @@ class Database(object):
         self.dburi = dburi
         self.search = search
         self.engine = create_engine(self.dburi)
-        #metadata.create_all(self.engine)
-        self.migrate(app)
+        metadata.create_all(self.engine)
+        #self.migrate(app)
         # If we want the objects returned from query() to be usable
         # outside of the session, we need to expunge them from the session,
         # and since the DatabaseSession always calls commit() on the session
@@ -632,6 +768,64 @@ class DatabaseSession(object):
         except sqlalchemy.orm.exc.NoResultFound:
             return None
 
+    def getBoards(self, subscribed=False):
+        query = self.session().query(Board)
+        if subscribed:
+            query = query.filter_by(subscribed=subscribed)
+        return query.order_by(Board.title).all()
+
+    def getBoard(self, key):
+        query = self.session().query(Board).filter_by(key=key)
+        try:
+            return query.one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
+    def getBoardByID(self, id):
+        try:
+            return self.session().query(Board).filter_by(id=id).one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
+    def getLane(self, key):
+        query = self.session().query(Lane).filter_by(key=key)
+        try:
+            return query.one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
+    def getLaneByID(self, id):
+        try:
+            return self.session().query(Lane).filter_by(id=id).one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
+    def getWorklist(self, key):
+        query = self.session().query(Worklist).filter_by(key=key)
+        try:
+            return query.one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
+    def getWorklistByID(self, id):
+        try:
+            return self.session().query(Worklist).filter_by(id=id).one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
+    def getWorklistItem(self, key):
+        query = self.session().query(WorklistItem).filter_by(key=key)
+        try:
+            return query.one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
+    def getWorklistItemByID(self, id):
+        try:
+            return self.session().query(WorklistItem).filter_by(id=id).one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
     def createProject(self, *args, **kw):
         o = Project(*args, **kw)
         self.session().add(o)
@@ -640,6 +834,18 @@ class DatabaseSession(object):
 
     def createStory(self, *args, **kw):
         s = Story(*args, **kw)
+        self.session().add(s)
+        self.session().flush()
+        return s
+
+    def createBoard(self, *args, **kw):
+        s = Board(*args, **kw)
+        self.session().add(s)
+        self.session().flush()
+        return s
+
+    def createWorklist(self, *args, **kw):
+        s = Worklist(*args, **kw)
         self.session().add(s)
         self.session().flush()
         return s

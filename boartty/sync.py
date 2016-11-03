@@ -144,7 +144,40 @@ class StoryUpdatedEvent(UpdateEvent):
 
     def __init__(self, story, status_changed=False):
         self.story_key = story.key
+        self.status_changed = status_changed
         self.updateRelatedProjects(story)
+
+class BoardAddedEvent(UpdateEvent):
+    def __repr__(self):
+        return '<BoardAddedEvent board_key:%s>' % (
+            self.board_key)
+
+    def __init__(self, board):
+        self.board_key = board.key
+
+class BoardUpdatedEvent(UpdateEvent):
+    def __repr__(self):
+        return '<BoardUpdatedEvent board_key:%s>' % (
+            self.board_key)
+
+    def __init__(self, board):
+        self.board_key = board.key
+
+class WorklistAddedEvent(UpdateEvent):
+    def __repr__(self):
+        return '<WorklistAddedEvent worklist_key:%s>' % (
+            self.worklist_key)
+
+    def __init__(self, worklist):
+        self.worklist_key = worklist.key
+
+class WorklistUpdatedEvent(UpdateEvent):
+    def __repr__(self):
+        return '<WorklistUpdatedEvent worklist_key:%s>' % (
+            self.worklist_key)
+
+    def __init__(self, worklist):
+        self.worklist_key = worklist.key
 
 def parseDateTime(dt):
     if dt is None:
@@ -550,6 +583,27 @@ class SyncStoryTask(Task):
                 self.results.append(StoryUpdatedEvent(story,
                                                       status_changed=status_changed))
 
+class SyncStoryByTaskTask(Task):
+    def __init__(self, task_id, priority=NORMAL_PRIORITY):
+        super(SyncStoryByTaskTask, self).__init__(priority)
+        self.task_id = task_id
+
+    def __repr__(self):
+        return '<SyncStoryByTaskTask %s>' % (self.task_id,)
+
+    def __eq__(self, other):
+        if (other.__class__ == self.__class__ and
+            other.task_id == self.task_id):
+            return True
+        return False
+
+    def run(self, sync):
+        app = sync.app
+        remote = sync.get('v1/tasks/%s' % (self.task_id,))
+
+        self.tasks.append(sync.submitTask(SyncStoryTask(
+            remote['story_id'], priority=self.priority)))
+
 class SetProjectUpdatedTask(Task):
     def __init__(self, project_key, updated, priority=NORMAL_PRIORITY):
         super(SetProjectUpdatedTask, self).__init__(priority)
@@ -571,6 +625,206 @@ class SetProjectUpdatedTask(Task):
         with app.db.getSession() as session:
             project = session.getProject(self.project_key)
             project.updated = self.updated
+
+class SyncBoardsTask(Task):
+    def __init__(self, priority=NORMAL_PRIORITY):
+        super(SyncBoardsTask, self).__init__(priority)
+
+    def __repr__(self):
+        return '<SyncBoardsTask>'
+
+    def __eq__(self, other):
+        if (other.__class__ == self.__class__):
+            return True
+        return False
+
+    #TODO: updated since, deleted
+    def run(self, sync):
+        app = sync.app
+        remote = sync.get('v1/boards')
+
+        for remote_board in remote:
+            t = SyncBoardTask(remote_board['id'], remote_board,
+                              priority=self.priority)
+            sync.submitTask(t)
+            self.tasks.append(t)
+
+class SyncWorklistsTask(Task):
+    def __init__(self, priority=NORMAL_PRIORITY):
+        super(SyncWorklistsTask, self).__init__(priority)
+
+    def __repr__(self):
+        return '<SyncWorklistsTask>'
+
+    def __eq__(self, other):
+        if (other.__class__ == self.__class__):
+            return True
+        return False
+
+    #TODO: updated since, deleted
+    def run(self, sync):
+        app = sync.app
+        remote = sync.get('v1/worklists')
+
+        for remote_worklist in remote:
+            t = SyncWorklistTask(remote_worklist['id'], remote_worklist,
+                                 priority=self.priority)
+            sync.submitTask(t)
+            self.tasks.append(t)
+
+class SyncBoardTask(Task):
+    def __init__(self, board_id, data=None, priority=NORMAL_PRIORITY):
+        super(SyncBoardTask, self).__init__(priority)
+        self.board_id = board_id
+        self.data = data
+
+    def __repr__(self):
+        return '<SyncBoardTask %s>' % (self.board_id,)
+
+    def __eq__(self, other):
+        if (other.__class__ == self.__class__ and
+            other.board_id == self.board_id and
+            other.data == self.data):
+            return True
+        return False
+
+    def updateLanes(self, sync, session, board, remote_lanes):
+        local_lane_ids = set([l.id for l in board.lanes])
+        remote_lane_ids = set()
+        for remote_lane in remote_lanes:
+            remote_lane_ids.add(remote_lane['id'])
+            if remote_lane['id'] not in local_lane_ids:
+                self.log.debug("Adding to board id %s lane %s" %
+                               (board.id, remote_lane,))
+                remote_created = parseDateTime(remote_lane['created_at'])
+                lane = board.addLane(id=remote_lane['id'],
+                                     position=remote_lane['position'],
+                                     created=remote_created)
+            else:
+                lane = session.getLane(remote_lane['id'])
+            lane.updated = parseDateTime(remote_lane['updated_at'])
+            t = SyncWorklistTask(remote_lane['worklist']['id'],
+                                 priority=self.priority)
+            t._run(sync, session, remote_lane['worklist'])
+            lane.worklist = session.getWorklistByID(remote_lane['worklist']['id'])
+        for local_lane in board.lanes[:]:
+            if local_lane.id not in remote_lane_ids:
+                session.delete(lane)
+
+    def run(self, sync):
+        app = sync.app
+        if self.data is None:
+            remote_board = sync.get('v1/boards/%s' % (self.board_id,))
+        else:
+            remote_board = self.data
+
+        with app.db.getSession() as session:
+            board = session.getBoardByID(remote_board['id'])
+            added = False
+            if not board:
+                board = session.createBoard(id=remote_board['id'])
+                sync.log.info("Created new board %s in local DB.", board.id)
+                added = True
+            board.title = remote_board['title']
+            board.description = remote_board['description']
+            board.updated = parseDateTime(remote_board['updated_at'])
+            board.creator = getUser(sync, session,
+                                    remote_board['creator_id'])
+            board.created = parseDateTime(remote_board['created_at'])
+
+            self.updateLanes(sync, session, board, remote_board['lanes'])
+
+            if added:
+                self.results.append(BoardAddedEvent(board))
+            else:
+                self.results.append(BoardUpdatedEvent(board))
+
+class SyncWorklistTask(Task):
+    def __init__(self, worklist_id, data=None, priority=NORMAL_PRIORITY):
+        super(SyncWorklistTask, self).__init__(priority)
+        self.worklist_id = worklist_id
+        self.data = data
+
+    def __repr__(self):
+        return '<SyncWorklistTask %s>' % (self.worklist_id,)
+
+    def __eq__(self, other):
+        if (other.__class__ == self.__class__ and
+            other.worklist_id == self.worklist_id and
+            other.data == self.data):
+            return True
+        return False
+
+    def updateItems(self, sync, session, worklist, remote_items):
+        local_item_ids = set([l.id for l in worklist.items])
+        remote_item_ids = set()
+        reenqueue = False
+        for remote_item in remote_items:
+            remote_item_ids.add(remote_item['id'])
+            if remote_item['id'] not in local_item_ids:
+                self.log.debug("Adding to worklist id %s item %s" %
+                               (worklist.id, remote_item,))
+                remote_created = parseDateTime(remote_item['created_at'])
+                self.log.debug("Create item %s", remote_item['id'])
+                item = worklist.addItem(id=remote_item['id'],
+                                        position=remote_item['list_position'],
+                                        created=remote_created)
+            else:
+                self.log.debug("Get item %s", remote_item['id'])
+                item = session.getWorklistItemByID(remote_item['id'])
+            self.log.debug("Using item %s", item)
+            item.updated = parseDateTime(remote_item['updated_at'])
+            if remote_item['item_type'] == 'story':
+                item.story = session.getStoryByID(remote_item['item_id'])
+                self.log.debug("Story %s", item.story)
+                if item.story is None:
+                    self.tasks.append(sync.submitTask(SyncStoryTask(
+                        remote_item['item_id'], priority=self.priority)))
+                    reenqueue = True
+            if remote_item['item_type'] == 'task':
+                item.task = session.getTaskByID(remote_item['item_id'])
+                self.log.debug("Task %s", item.task)
+                if item.task is None:
+                    self.tasks.append(sync.submitTask(SyncStoryByTaskTask(
+                        remote_item['item_id'], priority=self.priority)))
+                    reenqueue = True
+        if reenqueue:
+            self.tasks.append(sync.submitTask(SyncWorklistTask(
+                self.worklist_id, self.data, priority=self.priority)))
+
+        for local_item in worklist.items[:]:
+            if local_item.id not in remote_item_ids:
+                session.delete(item)
+
+    def run(self, sync):
+        app = sync.app
+        if self.data is None:
+            remote_worklist = sync.get('v1/worklists/%s' % (self.worklist_id,))
+        else:
+            remote_worklist = self.data
+
+        with app.db.getSession() as session:
+            return self._run(sync, session, remote_worklist)
+
+    def _run(self, sync, session, remote_worklist):
+        worklist = session.getWorklistByID(remote_worklist['id'])
+        added = False
+        if not worklist:
+            worklist = session.createWorklist(id=remote_worklist['id'])
+            sync.log.info("Created new worklist %s in local DB.", worklist.id)
+            added = True
+        worklist.title = remote_worklist['title']
+        worklist.updated = parseDateTime(remote_worklist['updated_at'])
+        worklist.creator = getUser(sync, session,
+                                remote_worklist['creator_id'])
+        worklist.created = parseDateTime(remote_worklist['created_at'])
+
+        self.updateItems(sync, session, worklist, remote_worklist['items'])
+
+        if added:
+            self.results.append(WorklistAddedEvent(worklist))
+        else:
+            self.results.append(WorklistUpdatedEvent(worklist))
 
 #storyboard
 class SyncQueriedChangesTask(Task):
@@ -954,6 +1208,8 @@ class Sync(object):
             self.submitTask(SyncUserListTask(HIGH_PRIORITY))
             self.submitTask(SyncProjectSubscriptionsTask(NORMAL_PRIORITY))
             self.submitTask(SyncSubscribedProjectsTask(NORMAL_PRIORITY))
+            self.submitTask(SyncBoardsTask(NORMAL_PRIORITY))
+            self.submitTask(SyncWorklistsTask(NORMAL_PRIORITY))
             #self.submitTask(SyncSubscribedProjectBranchesTask(LOW_PRIORITY))
             #self.submitTask(SyncOutdatedChangesTask(LOW_PRIORITY))
             #self.submitTask(PruneDatabaseTask(self.app.config.expire_age, LOW_PRIORITY))
@@ -976,11 +1232,13 @@ class Sync(object):
                 self.log.exception('Exception in periodicSync')
 
     def submitTask(self, task):
+        self.log.debug("Enqueue %s", task)
         if not self.offline:
             if not self.queue.put(task, task.priority):
                 task.complete(False)
         else:
             task.complete(False)
+        return task
 
     def run(self, pipe):
         task = None
