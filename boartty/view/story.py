@@ -591,6 +591,7 @@ class StoryView(urwid.WidgetWrap):
             # The set of task keys currently displayed
             unseen_keys = set(self.task_rows.keys())
             for task in story.tasks:
+                self.log.debug(task)
                 if task.pending_delete:
                     continue
                 row = self.task_rows.get(task.key)

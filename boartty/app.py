@@ -45,6 +45,7 @@ from boartty import search
 from boartty import requestsexceptions
 from boartty.view import story_list as view_story_list
 from boartty.view import project_list as view_project_list
+from boartty.view import board_list as view_board_list
 from boartty.view import story as view_story
 import boartty.view
 import boartty.version
@@ -676,6 +677,9 @@ class App(object):
         elif keymap.TOP_SCREEN in commands:
             self.clearHistory()
             self.refresh(force=True)
+        elif keymap.BOARD_LIST in commands:
+            view = view_board_list.BoardListView(self)
+            self.changeScreen(view)
         elif keymap.HELP in commands:
             self.help()
         elif keymap.QUIT in commands:

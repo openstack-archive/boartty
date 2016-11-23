@@ -42,6 +42,7 @@ STORY_SEARCH = 'story search'
 REFINE_STORY_SEARCH = 'refine story search'
 LIST_HELD = 'list held stories'
 NEW_STORY = 'new story'
+BOARD_LIST = 'board list'
 # Story screen:
 TOGGLE_HIDDEN = 'toggle hidden'
 TOGGLE_STARRED = 'toggle starred'
@@ -94,6 +95,7 @@ DEFAULT_KEYMAP = {
 
     PREV_SCREEN: 'esc',
     TOP_SCREEN: 'meta home',
+    BOARD_LIST: 'f6',
     HELP: ['f1', '?'],
     QUIT: ['ctrl q'],
     STORY_SEARCH: 'ctrl o',
