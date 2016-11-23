@@ -51,6 +51,11 @@ class SearchCompiler(object):
             result = and_(boartty.db.story_table.c.project_key == boartty.db.project_table.c.key,
                           result)
             tables.remove(boartty.db.project_table)
+        if boartty.db.tag_table in tables:
+            result = and_(boartty.db.story_tag_table.c.tag_key == boartty.db.tag_table.c.key,
+                          boartty.db.story_tag_table.c.story_key == boartty.db.story_table.c.key,
+                          result)
+            tables.remove(boartty.db.tag_table)
         if boartty.db.user_table in tables:
             result = and_(boartty.db.story_table.c.user_key == boartty.db.user_table.c.key,
                           result)
@@ -67,7 +72,7 @@ class SearchCompiler(object):
 if __name__ == '__main__':
     class Dummy(object):
         pass
-    query = 'recentlyseen:24 hours'
+    query = 'tag:zuulv3'
     lexer = tokenizer.SearchTokenizer()
     lexer.input(query)
     while True:

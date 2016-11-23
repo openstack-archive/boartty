@@ -86,7 +86,7 @@ def SearchParser():
                 | projects_term
                 | project_key_term
                 | branch_term
-                | topic_term
+                | tag_term
                 | ref_term
                 | label_term
                 | message_term
@@ -195,12 +195,12 @@ def SearchParser():
         else:
             p[0] = boartty.db.story_table.c.branch == p[2]
 
-    def p_topic_term(p):
-        '''topic_term : OP_TOPIC string'''
+    def p_tag_term(p):
+        '''tag_term : OP_TAG string'''
         if p[2].startswith('^'):
-            p[0] = func.matches(p[2], boartty.db.story_table.c.topic)
+            p[0] = func.matches(p[2], boartty.db.tag_table.c.name)
         else:
-            p[0] = boartty.db.story_table.c.topic == p[2]
+            p[0] = boartty.db.tag_table.c.name == p[2]
 
     def p_ref_term(p):
         '''ref_term : OP_REF string'''

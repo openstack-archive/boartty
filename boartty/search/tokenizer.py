@@ -28,7 +28,7 @@ operators = {
     'projects': 'OP_PROJECTS',
     '_project_key': 'OP_PROJECT_KEY',  # internal boartty use only
     'branch': 'OP_BRANCH',
-    'topic': 'OP_TOPIC',
+    'tag': 'OP_TAG',
     'ref': 'OP_REF',
     #'tr': 'OP_TR', # needs trackingids
     #'bug': 'OP_BUG', # needs trackingids
@@ -56,7 +56,6 @@ tokens = [
     'LPAREN',
     'RPAREN',
     'NUMBER',
-    'STORY_ID',
     'SSTRING',
     'DSTRING',
     'USTRING',
@@ -73,10 +72,6 @@ def SearchTokenizer():
     def t_OP(t):
         r'[a-zA-Z_][a-zA-Z_]*:'
         t.type = operators.get(t.value[:-1], 'OP')
-        return t
-
-    def t_STORY_ID(t):
-        r'I[a-fA-F0-9]{7,40}'
         return t
 
     def t_SSTRING(t):
