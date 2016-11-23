@@ -701,7 +701,7 @@ class SyncBoardTask(Task):
                                      position=remote_lane['position'],
                                      created=remote_created)
             else:
-                lane = session.getLane(remote_lane['id'])
+                lane = session.getLaneByID(remote_lane['id'])
             lane.updated = parseDateTime(remote_lane['updated_at'])
             t = SyncWorklistTask(remote_lane['worklist']['id'],
                                  priority=self.priority)
@@ -794,7 +794,7 @@ class SyncWorklistTask(Task):
 
         for local_item in worklist.items[:]:
             if local_item.id not in remote_item_ids:
-                session.delete(item)
+                session.delete(local_item)
 
     def run(self, sync):
         app = sync.app
