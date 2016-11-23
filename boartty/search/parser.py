@@ -125,12 +125,8 @@ def SearchParser():
         p[0] = boartty.db.story_table.c.last_seen >= s
 
     def p_story_term(p):
-        '''story_term : OP_STORY STORY_ID
-                       | OP_STORY NUMBER'''
-        if type(p[2]) == int:
-            p[0] = boartty.db.story_table.c.number == p[2]
-        else:
-            p[0] = boartty.db.story_table.c.story_id == p[2]
+        '''story_term : OP_STORY NUMBER'''
+        p[0] = boartty.db.story_table.c.id == p[2]
 
     def p_owner_term(p):
         '''owner_term : OP_OWNER string'''

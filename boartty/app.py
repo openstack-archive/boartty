@@ -243,7 +243,7 @@ class ProjectCache(object):
             del self.projects[project.key]
 
 class App(object):
-    simple_change_search = re.compile('^(\d+|I[a-fA-F0-9]{40})$')
+    simple_story_search = re.compile('^(\d+)$')
 
     def __init__(self, server=None, palette='default',
                  keymap='default', debug=False, verbose=False,
@@ -519,77 +519,64 @@ class App(object):
         self.popup(dialog, min_width=76, min_height=len(lines)+4)
 
     #storyboard
-    def _syncOneChangeFromQuery(self, query):
-        number = changeid = restid = None
-        if query.startswith("change:"):
-            number = query.split(':')[1].strip()
-            try:
-                number = int(number)
-            except ValueError:
-                number = None
-                changeid = query.split(':')[1].strip()
-        if not (number or changeid):
+    def _syncOneStoryFromQuery(self, query):
+        story = None
+        if query.startswith("story:"):
+            story = int(query.split(':')[1].strip())
+        if not story:
             return
         with self.db.getSession() as session:
-            if number:
-                changes = [session.getChangeByNumber(number)]
-            elif changeid:
-                changes = session.getChangesByChangeID(changeid)
-            change_keys = [c.key for c in changes if c]
-            restids = [c.id for c in changes if c]
-        if not change_keys:
+            stories = []
+            if story:
+                stories = [session.getStoryByID(story)]
+            story_keys = [s.key for s in stories if s]
+        if not story_keys:
             if self.sync.offline:
-                raise Exception('Can not sync change while offline.')
-            dialog = mywid.SystemMessage("Syncing change...")
+                raise Exception('Can not sync story while offline.')
+            dialog = mywid.SystemMessage("Syncing story...")
             self.popup(dialog, width=40, height=6)
             self.loop.draw_screen()
             try:
-                task = sync.SyncChangeByNumberTask(number or changeid, sync.HIGH_PRIORITY)
+                task = sync.SyncStoryByIDTask(story, sync.HIGH_PRIORITY)
                 self.sync.submitTask(task)
                 succeeded = task.wait(300)
                 if not succeeded:
-                    raise Exception('Unable to find change.')
+                    raise Exception('Unable to find story.')
                 for subtask in task.tasks:
                     succeeded = subtask.wait(300)
                     if not succeeded:
-                        raise Exception('Unable to sync change.')
+                        raise Exception('Unable to sync story.')
             finally:
                 # Remove "syncing..." popup
                 self.backScreen()
             with self.db.getSession() as session:
-                if number:
-                    changes = [session.getChangeByNumber(number)]
-                elif changeid:
-                    changes = session.getChangesByChangeID(changeid)
-                change_keys = [c.key for c in changes if c]
-        elif restids:
-            for restid in restids:
-                task = sync.SyncChangeTask(restid, sync.HIGH_PRIORITY)
-                self.sync.submitTask(task)
-        if not change_keys:
-            raise Exception('Change is not in local database.')
+                if story:
+                    stories = [session.getStoryByID(story)]
+                story_keys = [s.key for s in stories if s]
+        if not story_keys:
+            raise Exception('Story is not in local database.')
 
     def doSearch(self, query):
         self.log.debug("Search query: %s" % query)
         try:
-            self._syncOneChangeFromQuery(query)
+            self._syncOneStoryFromQuery(query)
         except Exception as e:
             return self.error(e.message)
         with self.db.getSession() as session:
             try:
-                changes = session.getChanges(query)
+                stories = session.getStories(query, False)
             except boartty.search.SearchSyntaxError as e:
                 return self.error(e.message)
             except sqlalchemy.exc.OperationalError as e:
                 return self.error(e.message)
             except Exception as e:
                 return self.error(str(e))
-            change_key = None
-            if len(changes) == 1:
-                change_key = changes[0].key
+            story_key = None
+            if len(stories) == 1:
+                story_key = stories[0].key
         try:
-            if change_key:
-                view = view_change.ChangeView(self, change_key)
+            if story_key:
+                view = view_story.StoryView(self, story_key)
             else:
                 view = view_story_list.StoryListView(self, query)
             self.changeScreen(view)
@@ -607,8 +594,8 @@ class App(object):
     def _searchDialog(self, dialog):
         self.backScreen()
         query = dialog.entry.edit_text.strip()
-        if self.simple_change_search.match(query):
-            query = 'change:%s' % query
+        if self.simple_story_search.match(query):
+            query = 'story:%s' % query
         else:
             result = self.parseInternalURL(query)
             if result is not None:
