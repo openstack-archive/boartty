@@ -314,6 +314,11 @@ class TaskRow(urwid.WidgetWrap):
         self.app.backScreen()
         self.story_view.refresh()
 
+    def search(self, search, attribute):
+        if self.title.search(search, attribute):
+            return True
+        return False
+
 class StoryButton(urwid.Button):
     button_left = urwid.Text(u' ')
     button_right = urwid.Text(u' ')
@@ -442,7 +447,7 @@ class DescriptionBox(mywid.HyperText):
         super(DescriptionBox, self).set_text(text)
 
 @mouse_scroll_decorator.ScrollByWheel
-class StoryView(urwid.WidgetWrap):
+class StoryView(urwid.WidgetWrap, mywid.Searchable):
     def getCommands(self):
         return [
             (keymap.TOGGLE_HIDDEN,
@@ -469,6 +474,8 @@ class StoryView(urwid.WidgetWrap):
              "Refresh this story"),
             (keymap.EDIT_TITLE,
              "Edit the title of this story"),
+            (keymap.INTERACTIVE_SEARCH,
+             "Interactive search"),
             ]
 
     def help(self):
@@ -483,6 +490,7 @@ class StoryView(urwid.WidgetWrap):
     def __init__(self, app, story_key):
         super(StoryView, self).__init__(urwid.Pile([]))
         self.log = logging.getLogger('boartty.view.story')
+        self.searchInit()
         self.app = app
         self.story_key = story_key
         self.task_rows = {}
@@ -655,6 +663,8 @@ class StoryView(urwid.WidgetWrap):
         return self.app.toggleHeldStory(self.story_key)
 
     def keypress(self, size, key):
+        if self.searchKeypress(size, key):
+            return None
         if not self.app.input_buffer:
             key = super(StoryView, self).keypress(size, key)
         keys = self.app.input_buffer + [key]
@@ -711,6 +721,11 @@ class StoryView(urwid.WidgetWrap):
             return None
         if keymap.EDIT_TITLE in commands:
             self.editTitle()
+            return None
+        if keymap.INTERACTIVE_SEARCH in commands:
+            self.searchStart()
+            if keymap.FURTHER_INPUT not in commands:
+                self.app.clearInputBuffer()
             return None
         return key
 

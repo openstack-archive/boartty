@@ -44,8 +44,13 @@ class TextButton(urwid.Button):
 
     def __init__(self, text, on_press=None, user_data=None):
         super(TextButton, self).__init__('', on_press=on_press, user_data=user_data)
-        self.text = urwid.Text(text)
+        self.text = SearchableText(text)
         self._w = urwid.AttrMap(self.text, None, focus_map='focused')
+
+    def search(self, search, attribute):
+        if self.text.search(search, attribute):
+            return True
+        return False
 
 class FixedButton(urwid.Button):
     def sizing(self):
