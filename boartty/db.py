@@ -450,6 +450,22 @@ class WorklistItem(object):
         return '<WorklistItem key=%s id=%s story=%s task=%s>' % (
             self.key, self.id, self.story, self.task)
 
+    @property
+    def title(self):
+        if self.story:
+            return self.story.title
+        elif self.task:
+            return self.task.title
+        return 'Unknown'
+
+    @property
+    def dereferenced_story_key(self):
+        if self.story:
+            return self.story.key
+        elif self.task:
+            return self.task.story.key
+        return None
+
 class SyncQuery(object):
     def __init__(self, name):
         self.name = name

@@ -505,9 +505,4 @@ class StoryListView(urwid.WidgetWrap, mywid.Searchable):
         return False
 
     def onSelect(self, button, story_key):
-        try:
-            view = view_story.StoryView(self.app, story_key)
-            self.app.changeScreen(view)
-        except boartty.view.DisplayError as e:
-            self.app.error(str(e))
-
+        self.app.openStory(story_key)
