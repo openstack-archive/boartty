@@ -706,6 +706,13 @@ class App(object):
         webbrowser.open_new_tab(url)
         self.loop.screen.clear()
 
+    def openStory(self, story_key):
+        try:
+            view = view_story.StoryView(self, story_key)
+            self.changeScreen(view)
+        except boartty.view.DisplayError as e:
+            self.error(str(e))
+
     def time(self, dt):
         if dt is None:
             return None

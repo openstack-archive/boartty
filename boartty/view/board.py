@@ -48,12 +48,10 @@ class BoardView(urwid.WidgetWrap, mywid.Searchable):
         return [(c[0], key(c[0]), c[1]) for c in commands]
 
     def interested(self, event):
-        if not (isinstance(event, sync.BoardAddedEvent)
-                or
-                isinstance(event, sync.StoryAddedEvent)
-                or
-                (isinstance(event, sync.StoryUpdatedEvent) and
-                 event.status_changed)):
+        if not ((isinstance(event, sync.BoardUpdatedEvent) and
+                 event.board_key == self.board_key) or
+                (isinstance(event, sync.WorklistUpdatedEvent) and
+                 event.worklist_key in self.worklist_keys)):
             self.log.debug("Ignoring refresh board due to event %s" % (event,))
             return False
         self.log.debug("Refreshing board due to event %s" % (event,))
@@ -65,9 +63,10 @@ class BoardView(urwid.WidgetWrap, mywid.Searchable):
         self.searchInit()
         self.app = app
         self.board_key = board_key
+        self.worklist_keys = set()
 
         self.title_label = urwid.Text(u'', wrap='clip')
-        self.description_label = urwid.Text(u'', wrap='clip')
+        self.description_label = urwid.Text(u'')
         board_info = []
         board_info_map={'story-data': 'focused-story-data'}
         for l, v in [("Title", self.title_label),
@@ -101,13 +100,22 @@ class BoardView(urwid.WidgetWrap, mywid.Searchable):
                 items = []
                 self.log.debug("Display lane %s", lane)
                 items.append(urwid.Text(lane.worklist.title))
+                self.worklist_keys.add(lane.worklist.key)
                 for item in lane.worklist.items:
                     self.log.debug("Display item %s", item)
-                    items.append(urwid.Text(item.story.title))
+                    items.append(mywid.TextButton(item.title,
+                                                  on_press=self.openItem,
+                                                  user_data=item.dereferenced_story_key))
                 pile = urwid.Pile(items)
                 columns.append(pile)
             columns = urwid.Columns(columns)
+            for x in self.listbox.body[self.listbox_board_start:]:
+                self.listbox.body.remove(x)
             self.listbox.body.append(columns)
+
+    def openItem(self, widget, story_key):
+        self.log.debug("Open story %s", story_key)
+        self.app.openStory(story_key)
 
     def handleCommands(self, commands):
         if keymap.REFRESH in commands:
