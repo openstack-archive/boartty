@@ -108,7 +108,8 @@ class AssigneeButton(mywid.SearchSelectButton):
         with self.app.db.getSession() as session:
             users = session.getUsers()
         for user in users:
-            yield (user.key, user.name)
+            if user.name is not None:
+                yield (user.key, user.name)
 
 class NewTaskDialog(urwid.WidgetWrap, mywid.LineBoxTitlePropertyMixin):
     signals = ['save', 'cancel']
