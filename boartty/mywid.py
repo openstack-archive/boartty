@@ -258,23 +258,33 @@ class YesNoDialog(ButtonDialog):
         return r
 
 class SearchableText(urwid.Text):
+    def __init__(self, *args, **kw):
+        self.__search = None
+        self.__attribute = None
+        super(SearchableText, self).__init__(*args, **kw)
+
     def set_text(self, markup):
-        self._markup = markup
-        super(SearchableText, self).set_text(markup)
+        self._searchable_markup = markup
+        self._search()
 
     def search(self, search, attribute):
-        if not search:
-            self.set_text(self._markup)
+        self.__search = search
+        self.__attribute = attribute
+        self._search()
+
+    def _search(self):
+        if not self.__search:
+            super(SearchableText, self).set_text(self._searchable_markup)
             return
-        (text, attrs) = urwid.util.decompose_tagmarkup(self._markup)
+        (text, attrs) = urwid.util.decompose_tagmarkup(self._searchable_markup)
         last = 0
         found = False
         while True:
-            start = text.find(search, last)
+            start = text.find(self.__search, last)
             if start < 0:
                 break
             found = True
-            end = start + len(search)
+            end = start + len(self.__search)
             i = 0
             newattrs = []
             for attr, al in attrs:
@@ -290,7 +300,7 @@ class SearchableText(urwid.Text):
                 after = max(i + al - end, 0)
                 if before:
                     newattrs.append((attr, before))
-                newattrs.append((attribute, len(search)))
+                newattrs.append((self.__attribute, len(self.__search)))
                 if after:
                     newattrs.append((attr, after))
                 i += al
@@ -298,7 +308,7 @@ class SearchableText(urwid.Text):
                 newattrs.append((None, start-i))
                 i += start-i
             if i < end:
-                newattrs.append((attribute, len(search)))
+                newattrs.append((self.__attribute, len(self.__search)))
             last = start + 1
             attrs = newattrs
         self._text = text
@@ -362,7 +372,7 @@ class Searchable(object):
         if self.current_result >= len(self.results):
             self.current_result = 0
 
-class HyperText(urwid.Text):
+class HyperText(SearchableText):
     _selectable = True
 
     def __init__(self, markup, align=urwid.LEFT, wrap=urwid.SPACE, layout=None):
@@ -409,7 +419,7 @@ class HyperText(urwid.Text):
     def focusItem(self, item):
         self.last_focused_index = self.focused_index
         self.focused_index = item
-        self.set_text(self._markup)
+        self.set_text(self._hypertext_markup)
         self._invalidate()
 
     def select(self):
@@ -497,7 +507,7 @@ class HyperText(urwid.Text):
         return markup
 
     def set_text(self, markup):
-        self._markup = markup
+        self._hypertext_markup = markup
         self.selectable_items = []
         super(HyperText, self).set_text(self.processLinks(markup))
 

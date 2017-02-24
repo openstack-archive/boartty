@@ -436,6 +436,11 @@ class StoryEventBox(mywid.HyperText):
             info = []
         self.set_text(text+comment_text+info)
 
+    def search(self, search, attribute):
+        if self.text.search(search, attribute):
+            return True
+        return False
+
 class DescriptionBox(mywid.HyperText):
     def __init__(self, app, description):
         self.app = app
