@@ -33,6 +33,57 @@ from boartty.view import mouse_scroll_decorator
 # |+------+------+|
 # +---------------+
 
+class LanePile(urwid.Pile):
+    def __init__(self, lane):
+        self.key = lane.key
+        self.manager = mywid.ListUpdateManager(self)
+            #self, LaneRow,
+            #lambda x: (LaneRow(x), (urwid.widget.WEIGHT, 1)))
+        super(LanePile, self).__init__([])
+
+    def update(self, lane):
+        pass #self.title.set_text(lane.worklist.title)
+
+    def __eq__(self, other):
+        if isinstance(other, LanePile):
+            return self.key == other.key
+        return False
+
+class TitleRow(urwid.Text):
+    def __init__(self, title):
+        super(TitleRow, self).__init__(title)
+        self.title = title
+
+    def update(self, other):
+        self.title = other.title
+        self.set_text(self.title)
+
+    def __eq__(self, other):
+        if isinstance(other, TitleRow):
+            return self.title == other.title
+        return False
+
+class LaneRow(mywid.TextButton):
+    def __init__(self, item, board_view):
+        super(LaneRow, self).__init__(item.title, on_press=self.open)
+        self.key = item.key
+        self.board_view = board_view
+        self.title = item.title
+        self.story_key = item.dereferenced_story_key
+
+    def update(self, other):
+        self.title = other.title
+        self.story_key = other.story_key
+        self.text.set_text(self.title)
+
+    def __eq__(self, other):
+        if isinstance(other, LaneRow):
+            return self.key == other.key
+        return False
+
+    def open(self, *args):
+        self.board_view.openItem(self.story_key)
+
 class BoardView(urwid.WidgetWrap, mywid.Searchable):
     def getCommands(self):
         return [
@@ -85,7 +136,14 @@ class BoardView(urwid.WidgetWrap, mywid.Searchable):
         self.listbox.body.append(board_info)
         self.listbox.body.append(urwid.Divider())
         self.listbox_board_start = len(self.listbox.body)
+
+        lane_columns = urwid.Columns([], dividechars=1)
+        self.listbox.body.append(lane_columns)
+
+        self.lane_manager = mywid.ListUpdateManager(lane_columns)
+
         self.refresh()
+        self.listbox.set_focus(1)
 
     def refresh(self):
         with self.app.db.getSession() as session:
@@ -95,25 +153,22 @@ class BoardView(urwid.WidgetWrap, mywid.Searchable):
             self.app.status.update(title=self.title)
             self.title_label.set_text(('story-data', board.title))
             self.description_label.set_text(('story-data', board.description))
-            columns = []
-            for lane in board.lanes:
-                items = []
-                self.log.debug("Display lane %s", lane)
-                items.append(urwid.Text(lane.worklist.title))
-                self.worklist_keys.add(lane.worklist.key)
+            lanes = [
+                (LanePile(x), (urwid.widget.WEIGHT, 1, False))
+                for x in board.lanes
+            ]
+            self.lane_manager.update(lanes)
+            for i, lane in enumerate(board.lanes):
+                lane_pile = self.lane_manager.widget.contents[i][0]
+                items = [
+                    (TitleRow(lane.worklist.title), (urwid.widget.WEIGHT, 1))
+                ]
                 for item in lane.worklist.items:
-                    self.log.debug("Display item %s", item)
-                    items.append(mywid.TextButton(item.title,
-                                                  on_press=self.openItem,
-                                                  user_data=item.dereferenced_story_key))
-                pile = urwid.Pile(items)
-                columns.append(pile)
-            columns = urwid.Columns(columns)
-            for x in self.listbox.body[self.listbox_board_start:]:
-                self.listbox.body.remove(x)
-            self.listbox.body.append(columns)
+                    items.append((TitleRow(u''), (urwid.widget.WEIGHT, 1)))
+                    items.append((LaneRow(item, self), (urwid.widget.WEIGHT, 1)))
+                lane_pile.manager.update(items)
 
-    def openItem(self, widget, story_key):
+    def openItem(self, story_key):
         self.log.debug("Open story %s", story_key)
         self.app.openStory(story_key)
 
