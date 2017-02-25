@@ -629,3 +629,39 @@ class SearchSelectButton(TextButton):
             return
         self.update(dialog.key, dialog.value)
         self._emit('changed')
+
+class ListUpdateManager(object):
+    """ Manage dynamic updates to a list. """
+
+    def __init__(self, widget):
+        self.widget = widget
+
+    def _updateSlot(self, i, item):
+        # Ensure that the row at i is the given item.  If the row
+        # already exists somewhere in the list, delete all rows
+        # between i and the row and then update the row.  If the row
+        # does not exist, insert the row at position i.
+        slot = None
+        while True:
+            if i >= len(self.widget.contents):
+                break
+            slot = self.widget.contents[i]
+            if (slot == item):
+                break
+            self.widget.contents.remove(slot)
+            slot = None
+        if not slot:
+            self.widget.contents.insert(i, item)
+            if not self.widget.selectable() and item[0].selectable():
+                self.widget.set_focus(i)
+        else:
+            slot[0].update(item[0])
+        return i+1
+
+    def update(self, items):
+        i = 0
+        for item in items:
+            i = self._updateSlot(i, item)
+        while i < len(self.widget.contents):
+            slot = self.widget.contents[i]
+            self.widgets.contents.remove(slot)
