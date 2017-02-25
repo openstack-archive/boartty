@@ -37,7 +37,7 @@ class BoardView(urwid.WidgetWrap, mywid.Searchable):
     def getCommands(self):
         return [
             (keymap.REFRESH,
-             "Sync subscribed boards"),
+             "Sync current board"),
             (keymap.INTERACTIVE_SEARCH,
              "Interactive search"),
         ]
@@ -116,6 +116,21 @@ class BoardView(urwid.WidgetWrap, mywid.Searchable):
     def openItem(self, widget, story_key):
         self.log.debug("Open story %s", story_key)
         self.app.openStory(story_key)
+
+    def keypress(self, size, key):
+        if self.searchKeypress(size, key):
+            return None
+
+        if not self.app.input_buffer:
+            key = super(BoardView, self).keypress(size, key)
+        keys = self.app.input_buffer + [key]
+        commands = self.app.config.keymap.getCommands(keys)
+        ret = self.handleCommands(commands)
+        if ret is True:
+            if keymap.FURTHER_INPUT not in commands:
+                self.app.clearInputBuffer()
+            return None
+        return key
 
     def handleCommands(self, commands):
         if keymap.REFRESH in commands:
