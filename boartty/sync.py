@@ -1027,6 +1027,8 @@ class UpdateStoryTask(Task):
             #    story.pending_description = False
             data['description'] = story.description
             data['title'] = story.title
+            tags_data = []
+            tags_data = list([t.name for t in story.tags])
             story.pending = False
 
             if story.id is None:
@@ -1035,6 +1037,16 @@ class UpdateStoryTask(Task):
             else:
                 result = sync.put('v1/stories/%s' % (story.id,),
                                   data)
+            local_tags = set(tags_data)
+            remote_tags = set(sync.get('v1/stories/%s/tags' % (story.id,)))
+            added = list(local_tags - remote_tags)
+            removed = list(remote_tags - local_tags)
+            if removed:
+                sync.delete('v1/tags/%s' % (story.id,),
+                                                removed)
+            if added:
+                result = sync.put('v1/tags/%s' % (story.id,),
+                                           added)
         sync.submitTask(SyncStoryTask(story.id, result,
                                       priority=self.priority))
 

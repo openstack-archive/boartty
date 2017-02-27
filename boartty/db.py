@@ -715,9 +715,22 @@ class DatabaseSession(object):
         except sqlalchemy.orm.exc.NoResultFound:
             return []
 
+    def getTag(self, name):
+        try:
+            return self.session().query(Tag).filter_by(name=name).one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
     def getTagByID(self, id):
         try:
             return self.session().query(Tag).filter_by(id=id).one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+
+    def getStoryTag(self, story_key, tag_key):
+        try:
+            return self.session().query(StoryTag).filter_by(
+                story_key=story_key, tag_key=tag_key).one()
         except sqlalchemy.orm.exc.NoResultFound:
             return None
 
@@ -886,6 +899,12 @@ class DatabaseSession(object):
 
     def createTag(self, *args, **kw):
         o = Tag(*args, **kw)
+        self.session().add(o)
+        self.session().flush()
+        return o
+
+    def createStoryTag(self, *args, **kw):
+        o = StoryTag(*args, **kw)
         self.session().add(o)
         self.session().flush()
         return o
