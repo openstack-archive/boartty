@@ -589,8 +589,8 @@ class StoryView(urwid.WidgetWrap, mywid.Searchable):
             else:
                 creator_string = story.creator_name
             self.creator_label.text.set_text(('story-data', creator_string))
-            tags_string = ' '.join([t.name for t in story.tags])
-            self.tags_label.set_text(('story-data', tags_string))
+            self.tags_string = ' '.join([t.name for t in story.tags])
+            self.tags_label.set_text(('story-data', self.tags_string))
             self.title_label.set_text(('story-data', story.title))
             self.created_label.set_text(('story-data', str(self.app.time(story.created))))
             self.updated_label.set_text(('story-data', str(self.app.time(story.updated))))
@@ -728,6 +728,9 @@ class StoryView(urwid.WidgetWrap, mywid.Searchable):
         if keymap.EDIT_TITLE in commands:
             self.editTitle()
             return None
+        if keymap.EDIT_TAGS in commands:
+            self.editTags()
+            return None
         if keymap.INTERACTIVE_SEARCH in commands:
             self.searchStart()
             if keymap.FURTHER_INPUT not in commands:
@@ -836,11 +839,39 @@ class StoryView(urwid.WidgetWrap, mywid.Searchable):
             lambda button: self.updateTitle(dialog, False))
         self.app.popup(dialog)
 
+    def editTags(self):
+        dialog = mywid.LineEditDialog(self.app,
+                                      'Edit Story Tags (Space Separated)',
+                                      '', 'Tags: ', self.tags_string,
+                                      ring=self.app.ring)
+        urwid.connect_signal(dialog, 'save',
+            lambda button: self.updateTags(dialog, True))
+        urwid.connect_signal(dialog, 'cancel',
+            lambda button: self.updateTags(dialog, False))
+        self.app.popup(dialog)
+
     def updateTitle(self, dialog, save):
         if save:
             with self.app.db.getSession() as session:
                 story = session.getStory(self.story_key)
                 story.title = dialog.entry.edit_text
+            self.app.sync.submitTask(
+                sync.UpdateStoryTask(story.key, sync.HIGH_PRIORITY))
+        self.app.backScreen()
+        self.refresh()
+
+    def updateTags(self, dialog, save):
+        if save:
+            with self.app.db.getSession() as session:
+                story = session.getStory(self.story_key)
+                new_tags = dialog.entry.edit_text.split(' ')
+                for tag_name in new_tags:
+                    tag = session.getTag(tag_name)
+                    if tag is None:
+                        tag = session.createTag(tag_name)
+                    story_tag = session.getStoryTag(story.key, tag_name)
+                    if story_tag is None:
+                        session.createStoryTag(story, tag)
             self.app.sync.submitTask(
                 sync.UpdateStoryTask(story.key, sync.HIGH_PRIORITY))
         self.app.backScreen()

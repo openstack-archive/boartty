@@ -57,6 +57,7 @@ NEW_TASK = 'new task'
 DELETE_TASK = 'delete task'
 REFRESH = 'refresh'
 EDIT_TITLE = 'edit title'
+EDIT_TAGS = 'edit tags'
 EDIT_DESCRIPTION = 'edit description'
 SORT_BY_NUMBER = 'sort by number'
 SORT_BY_UPDATED = 'sort by updated'
@@ -116,6 +117,7 @@ DEFAULT_KEYMAP = {
     DELETE_TASK: 'delete',
     REFRESH: 'ctrl r',
     EDIT_TITLE: 'ctrl t',
+    EDIT_TAGS: 'ctrl g',
     EDIT_DESCRIPTION: 'ctrl d',
     SORT_BY_NUMBER: [['S', 'n']],
     SORT_BY_UPDATED: [['S', 'u']],
