@@ -17,7 +17,7 @@ import six
 
 operators = {
     'age': 'OP_AGE',
-    'recentlyseen': 'OP_RECENTLYSEEN', # Boardtty extension
+    'recentlyseen': 'OP_RECENTLYSEEN', # Boartty extension
     'story': 'OP_STORY',
     'owner': 'OP_OWNER',
     #'OP_OWNERIN', # needs local group membership

@@ -1202,7 +1202,7 @@ class VacuumDatabaseTask(Task):
 
 class Sync(object):
     def __init__(self, app, disable_background_sync):
-        self.user_agent = 'Boardtty/%s %s' % (boartty.version.version_info.release_string(),
+        self.user_agent = 'Boartty/%s %s' % (boartty.version.version_info.release_string(),
                                             requests.utils.default_user_agent())
         self.version = (0, 0, 0)
         self.offline = False

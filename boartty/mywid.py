@@ -25,7 +25,7 @@ GLOBAL_HELP = (
     (keymap.TOP_SCREEN,
      "Back to project list"),
     (keymap.QUIT,
-     "Quit Boardtty"),
+     "Quit Boartty"),
     (keymap.STORY_SEARCH,
      "Search for stories"),
     (keymap.LIST_HELD,

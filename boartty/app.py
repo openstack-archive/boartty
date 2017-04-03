@@ -55,7 +55,7 @@ Welcome to Boartty!
 
 To get started, you should subscribe to some projects.  Press the "L"
 key (shift-L) to list all the projects, navigate to the ones you are
-interested in, and then press "s" to subscribe to them.  Boardtty will
+interested in, and then press "s" to subscribe to them.  Boartty will
 automatically sync stories in your subscribed projects.
 
 Press the F1 key anywhere to get help.  Your terminal emulator may
@@ -820,7 +820,7 @@ class App(object):
 
 
 def version():
-    return "Boardtty version: %s" % boartty.version.version_info.release_string()
+    return "Boartty version: %s" % boartty.version.version_info.release_string()
 
 class PrintKeymapAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -872,10 +872,10 @@ def main():
                         help='print the palette attribute names to stdout')
     parser.add_argument('--open', nargs=1, action=OpenChangeAction,
                         metavar='URL',
-                        help='open the given URL in a running Boardtty')
+                        help='open the given URL in a running Boartty')
     parser.add_argument('--version', dest='version', action='version',
                         version=version(),
-                        help='show Boardtty\'s version')
+                        help='show Boartty\'s version')
     parser.add_argument('-p', dest='palette', default='default',
                         help='color palette to use')
     parser.add_argument('-k', dest='keymap', default='default',
