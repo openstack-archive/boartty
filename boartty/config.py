@@ -163,7 +163,7 @@ class Config(object):
         self.ssl_ca_path = server.get('ssl-ca-path', None)
         if self.ssl_ca_path is not None:
             self.ssl_ca_path = os.path.expanduser(self.ssl_ca_path)
-            # Boardtty itself uses the Requests library
+            # Boartty itself uses the Requests library
             os.environ['REQUESTS_CA_BUNDLE'] = self.ssl_ca_path
             # And this is to allow Git callouts
             os.environ['GIT_SSL_CAINFO'] = self.ssl_ca_path
@@ -241,10 +241,10 @@ class Config(object):
 
     def printSample(self):
         filename = 'share/boartty/examples'
-        print("""Boardtty requires a configuration file at ~/.boartty.yaml
+        print("""Boartty requires a configuration file at ~/.boartty.yaml
 If the file contains a password then permissions must be set to 0600.
 
-Several sample configuration files were installed with Boardtty and are
+Several sample configuration files were installed with Boartty and are
 available in %s in the root of the installation.
 
 For more information, please see the README.
