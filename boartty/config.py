@@ -45,6 +45,7 @@ class ConfigSchema(object):
               'ssl-ca-path': str,
               'dburi': str,
               'log-file': str,
+              'lock-file': str,
               'socket': str,
               'auth-type': v.Any('basic', 'digest', 'form'),
               }
