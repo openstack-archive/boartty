@@ -1,0 +1,12 @@
+Verified+1: Jenkins
+Code-Review+1: Clint 'SpamapS' Byrum <clint@fewbar.com>
+Code-Review+1: Zara <thezarazia@gmail.com>
+Code-Review+1: Masayuki Igawa <masayuki@igawa.io>
+Code-Review+2: James E. Blair <corvus@inaugust.com>
+Workflow+1: James E. Blair <corvus@inaugust.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Mon, 27 Nov 2017 19:49:04 +0000
+Reviewed-on: https://review.openstack.org/438655
+Project: openstack/boartty
+Branch: refs/heads/master
