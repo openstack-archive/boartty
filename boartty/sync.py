@@ -1038,16 +1038,21 @@ class UpdateStoryTask(Task):
                 result = sync.put('v1/stories/%s' % (story.id,),
                                   data)
             local_tags = set(tags_data)
-            remote_tags = set(sync.get('v1/stories/%s/tags' % (story.id,)))
+            remote_tags = sync.get('v1/stories/%s/tags' % (story.id,))
+            remote_tags = set([t['name'] for t in remote_tags])
             added = list(local_tags - remote_tags)
             removed = list(remote_tags - local_tags)
             if removed:
+                self.log.info("Remove tags %s from %s",
+                              removed, story.id)
                 sync.delete('v1/tags/%s' % (story.id,),
-                                                removed)
+                            removed)
             if added:
+                self.log.info("Add tags %s to %s",
+                              added, story.id)
                 result = sync.put('v1/tags/%s' % (story.id,),
-                                           added)
-        sync.submitTask(SyncStoryTask(story.id, result,
+                                  added)
+        sync.submitTask(SyncStoryTask(story.id,
                                       priority=self.priority))
 
 class UpdateTaskTask(Task):

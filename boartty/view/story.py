@@ -480,6 +480,8 @@ class StoryView(urwid.WidgetWrap, mywid.Searchable):
              "Refresh this story"),
             (keymap.EDIT_TITLE,
              "Edit the title of this story"),
+            (keymap.EDIT_TAGS,
+             "Edit this story's tags"),
             (keymap.INTERACTIVE_SEARCH,
              "Interactive search"),
             ]
@@ -865,13 +867,13 @@ class StoryView(urwid.WidgetWrap, mywid.Searchable):
             with self.app.db.getSession() as session:
                 story = session.getStory(self.story_key)
                 new_tags = dialog.entry.edit_text.split(' ')
+                tags = []
                 for tag_name in new_tags:
                     tag = session.getTag(tag_name)
                     if tag is None:
                         tag = session.createTag(tag_name)
-                    story_tag = session.getStoryTag(story.key, tag_name)
-                    if story_tag is None:
-                        session.createStoryTag(story, tag)
+                    tags.append(tag)
+                story.tags = tags
             self.app.sync.submitTask(
                 sync.UpdateStoryTask(story.key, sync.HIGH_PRIORITY))
         self.app.backScreen()
