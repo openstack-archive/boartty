@@ -28,6 +28,8 @@ GLOBAL_HELP = (
      "Quit Boartty"),
     (keymap.STORY_SEARCH,
      "Search for stories"),
+    (keymap.NEW_STORY,
+     "Create a new story"),
     (keymap.LIST_HELD,
      "List held stories"),
     (keymap.KILL,
