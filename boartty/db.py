@@ -560,7 +560,7 @@ class Database(object):
         self.search = search
         self.engine = create_engine(self.dburi)
         metadata.create_all(self.engine)
-        #self.migrate(app)
+        self.migrate(app)
         # If we want the objects returned from query() to be usable
         # outside of the session, we need to expunge them from the session,
         # and since the DatabaseSession always calls commit() on the session
@@ -590,7 +590,7 @@ class Database(object):
 
         if current_rev is None and has_table:
             self.log.debug('Stamping database as initial revision')
-            alembic.command.stamp(config, "44402069e137")
+            alembic.command.stamp(config, "183755ac91df")
         alembic.command.upgrade(config, 'head')
 
 class DatabaseSession(object):
