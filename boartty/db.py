@@ -146,6 +146,7 @@ story_tag_table = Table(
     Column('key', Integer, primary_key=True),
     Column('story_key', Integer, ForeignKey("story.key"), index=True),
     Column('tag_key', Integer, ForeignKey("tag.key"), index=True),
+    UniqueConstraint('story_key', 'tag_key', name='story_tag_unique'),
 )
 task_table = Table(
     'task', metadata,
