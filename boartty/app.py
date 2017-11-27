@@ -774,7 +774,11 @@ class App(object):
         return ret
 
     def newStory(self):
-        dialog = view_story.NewStoryDialog(self)
+        if hasattr(self.frame.body, 'project_key'):
+            project_key = self.frame.body.project_key
+        else:
+            project_key = None
+        dialog = view_story.NewStoryDialog(self, project_key)
         urwid.connect_signal(dialog, 'save',
                              lambda button: self.saveNewStory(dialog))
         urwid.connect_signal(dialog, 'cancel',
@@ -793,7 +797,7 @@ class App(object):
                 description=dialog.description_field.edit_text,
                 pending=True)
             task = story.addTask(
-                project=session.getProjectByID(dialog.project_button.key),
+                project=session.getProject(dialog.project_button.key),
                 title=dialog.title_field.edit_text,
                 pending=True)
 

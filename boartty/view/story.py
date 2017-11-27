@@ -39,7 +39,7 @@ except AttributeError:
 
 class NewStoryDialog(urwid.WidgetWrap, mywid.LineBoxTitlePropertyMixin):
     signals = ['save', 'cancel']
-    def __init__(self, app):
+    def __init__(self, app, project_key):
         self.app = app
         save_button = mywid.FixedButton(u'Save')
         cancel_button = mywid.FixedButton(u'Cancel')
@@ -53,7 +53,14 @@ class NewStoryDialog(urwid.WidgetWrap, mywid.LineBoxTitlePropertyMixin):
                    ('pack', cancel_button)]
         buttons = urwid.Columns(buttons, dividechars=2)
 
-        self.project_button = ProjectButton(self.app)
+        if project_key:
+            with self.app.db.getSession() as session:
+                project = session.getProject(project_key)
+                project_name = project.name
+        else:
+            project_name = None
+
+        self.project_button = ProjectButton(self.app, project_key, project_name)
         self.title_field = mywid.MyEdit(u'', edit_text=u'', ring=app.ring)
         self.description_field = mywid.MyEdit(u'', edit_text='',
                                               multiline=True, ring=app.ring)
