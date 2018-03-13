@@ -24,6 +24,8 @@ DEFAULT_PALETTE={
     # Story view
     'story-data': ['dark cyan', ''],
     'focused-story-data': ['light cyan', ''],
+    'story-notice-data': ['yellow', ''],
+    'focused-story-notice-data': ['yellow,standout', ''],
     'story-header': ['light blue', ''],
     'task-id': ['dark cyan', ''],
     'task-title': ['light green', ''],

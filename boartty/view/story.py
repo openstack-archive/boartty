@@ -518,6 +518,7 @@ class StoryView(urwid.WidgetWrap, mywid.Searchable):
         self.created_label = urwid.Text(u'', wrap='clip')
         self.updated_label = urwid.Text(u'', wrap='clip')
         self.status_label = urwid.Text(u'', wrap='clip')
+        self.access_label = urwid.Text(u'', wrap='clip')
         self.permalink_label = mywid.TextButton(u'', on_press=self.openPermalink)
         story_info = []
         story_info_map={'story-data': 'focused-story-data'}
@@ -531,6 +532,7 @@ class StoryView(urwid.WidgetWrap, mywid.Searchable):
                      ("Created", self.created_label),
                      ("Updated", self.updated_label),
                      ("Status", self.status_label),
+                     ("Access", self.access_label),
                      ("Permalink", urwid.Padding(urwid.AttrMap(self.permalink_label, None,
                                                                focus_map=story_info_map),
                                                  width='pack')),
@@ -604,6 +606,10 @@ class StoryView(urwid.WidgetWrap, mywid.Searchable):
             self.created_label.set_text(('story-data', str(self.app.time(story.created))))
             self.updated_label.set_text(('story-data', str(self.app.time(story.updated))))
             self.status_label.set_text(('story-data', story.status))
+            if story.private:
+                self.access_label.set_text(('story-notice-data', 'private'))
+            else:
+                self.access_label.set_text(('story-data', 'public'))
             self.permalink_url = '' # storyboard urlparse.urljoin(self.app.config.url, str(story.number))
             self.permalink_label.text.set_text(('story-data', self.permalink_url))
             self.description.set_text(story.description)
