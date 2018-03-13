@@ -566,6 +566,7 @@ class SyncStoryTask(Task):
             story.creator = getUser(sync, session,
                                     remote_story['creator_id'])
             story.created = parseDateTime(remote_story['created_at'])
+            story.private = remote_story['private']
 
             if story.status != remote_story.get('status'):
                 status_changed = True
@@ -692,6 +693,8 @@ class SyncBoardTask(Task):
         local_lane_ids = set([l.id for l in board.lanes])
         remote_lane_ids = set()
         for remote_lane in remote_lanes:
+            if remote_lane['worklist']['archived']:
+                continue
             remote_lane_ids.add(remote_lane['id'])
             if remote_lane['id'] not in local_lane_ids:
                 self.log.debug("Adding to board id %s lane %s" %
@@ -709,7 +712,7 @@ class SyncBoardTask(Task):
             lane.worklist = session.getWorklistByID(remote_lane['worklist']['id'])
         for local_lane in board.lanes[:]:
             if local_lane.id not in remote_lane_ids:
-                session.delete(lane)
+                session.delete(local_lane)
 
     def run(self, sync):
         app = sync.app
@@ -760,6 +763,8 @@ class SyncWorklistTask(Task):
         remote_item_ids = set()
         reenqueue = False
         for remote_item in remote_items:
+            if remote_item['archived']:
+                continue
             remote_item_ids.add(remote_item['id'])
             if remote_item['id'] not in local_item_ids:
                 self.log.debug("Adding to worklist id %s item %s" %
