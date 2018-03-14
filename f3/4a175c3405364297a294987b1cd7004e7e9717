@@ -1,0 +1,8 @@
+Code-Review+2: James E. Blair <corvus@inaugust.com>
+Workflow+1: James E. Blair <corvus@inaugust.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Wed, 14 Mar 2018 19:00:36 +0000
+Reviewed-on: https://review.openstack.org/552714
+Project: openstack/boartty
+Branch: refs/heads/master
