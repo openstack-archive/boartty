@@ -199,7 +199,7 @@ class TaskRow(urwid.WidgetWrap):
         self.columns = urwid.Columns([], dividechars=1)
 
         for (widget, attr, packing) in [
-                (self.taskid, 'task-id', ('given', 4, False)),
+                (self.taskid, 'task-id', ('given', 6, False)),
                 (self.project, 'task-project', ('weight', 1, False)),
                 (self.title, 'task-title', ('weight', 2, False)),
                 (self.status, 'task-status', ('weight', 1, False)),
