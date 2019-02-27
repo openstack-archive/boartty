@@ -537,7 +537,7 @@ class App(object):
             self.popup(dialog, width=40, height=6)
             self.loop.draw_screen()
             try:
-                task = sync.SyncStoryByIDTask(story, sync.HIGH_PRIORITY)
+                task = sync.SyncStoryTask(story, priority=sync.HIGH_PRIORITY)
                 self.sync.submitTask(task)
                 succeeded = task.wait(300)
                 if not succeeded:
