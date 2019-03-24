@@ -2,7 +2,7 @@ Contributing
 ============
 
 To browse the latest code, see: https://git.openstack.org/cgit/openstack/boartty/tree/
-To clone the latest code, use `git clone git://git.openstack.org/openstack/boartty`
+To clone the latest code, use `git clone https://git.openstack.org/openstack/boartty`
 
 Bugs are handled at: https://storyboard.openstack.org/
 
