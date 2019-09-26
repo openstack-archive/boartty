@@ -1,5 +1,0 @@
-*.pyc
-*.egg*
-boartty-env
-.tox
-doc/build
